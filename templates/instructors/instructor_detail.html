@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}{{ instructor.name }}'s Details 👩‍🏫{% endblock %}
+
+{% block content %}
+  <div class="container mt-4">
+    <h1 class="display-4">{{ instructor.name }}'s Details 👩‍🏫</h1>
+    <ul class="list-group">
+      <li class="list-group-item">
+        <strong>Name:</strong> {{ instructor.name }} 📋
+      </li>
+      <li class="list-group-item">
+        <strong>Email:</strong> {{ instructor.email }} 📧
+      </li>
+      <li class="list-group-item">
+        <strong>Specialty:</strong> {{ instructor.specialty }} 🎯
+      </li>
+      <li class="list-group-item">
+        <strong>Experience:</strong> {{ instructor.experience }} years 📊
+      </li>
+    </ul>
+  </div>
+{% endblock %}

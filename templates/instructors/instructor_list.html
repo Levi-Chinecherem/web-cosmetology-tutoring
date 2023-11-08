@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Instructors 🎓{% endblock %}
+
+{% block content %}
+  <div class="container mt-4">
+    <h1 class="display-4">Instructors 🎓</h1>
+    <ul class="list-group">
+      {% for instructor in instructors %}
+        <li class="list-group-item">
+          <a href="{% url 'instructor-detail' instructor.pk %}">{{ instructor.name }} 🌟</a>
+          <span class="float-right">
+            <a href="{% url 'instructor-update' instructor.pk %}" class="btn btn-info btn-sm mx-1" role="button">Update ✏️</a>
+            <a href="{% url 'instructor-delete' instructor.pk %}" class="btn btn-danger btn-sm mx-1" role="button">Delete 🗑️</a>
+          </span>
+        </li>
+      {% empty %}
+        <p>No instructors available. 😞</p>
+      {% endfor %}
+    </ul>
+    <a href="{% url 'instructor-create' %}" class="btn btn-success mt-3" role="button">Add Instructor 📢</a>
+  </div>
+{% endblock %}

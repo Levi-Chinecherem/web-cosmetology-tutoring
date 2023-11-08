@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Progress 📈{% endblock %}
+
+{% block content %}
+  <div class="container mt-4">
+    <h1 class="display-4">Progress 📈</h1>
+    <ul class="list-group">
+      {% for student_progress in student_progress_list %}
+        <li class="list-group-item">
+          <a href="{% url 'student-progress-detail' student_progress.pk %}">{{ student_progress.student.username }} 🎓</a>
+          <span class="float-right">
+            <a href="{% url 'student-progress-detail' student_progress.pk %}" class="btn btn-info btn-sm mx-1" role="button">Details 📊</a>
+          </span>
+        </li>
+      {% empty %}
+        <p>No progress available. 😞</p>
+      {% endfor %}
+    </ul>
+  </div>
+{% endblock %}

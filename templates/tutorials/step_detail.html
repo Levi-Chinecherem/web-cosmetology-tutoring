@@ -1,0 +1,19 @@
+<!-- tutorials/templates/tutorials/step_detail.html -->
+{% extends "base.html" %}
+
+{% block title %}{{ step.title }}{% endblock %}
+
+{% block content %}
+  <div class="container my-4">
+    <h1 class="display-4">{{ step.title }} 📖</h1>
+    <img src="{{ step.tutorial.image.url }}" alt="{{ step.title }} Image" class="img-fluid my-3" width="800">
+    <div class="ckeditor-content mt-3">
+      {{ step.content|safe }} 🎯
+    </div>
+    <div class="my-3">
+      {% if user.has_perm 'tutorials.can_delete_step' %}
+        <a href="{% url 'step-delete' step.pk %}" class="btn btn-danger">Delete Step</a>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Step List 📝{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h1 class="display-4">Step List 📝</h1>
+    <ul class="list-group">
+        {% for step in steps %}
+            <li class="list-group-item">
+                <a href="{% url 'step-detail' step.pk %}">{{ step.title }} 📖</a>
+            </li>
+        {% empty %}
+            <li class="list-group-item">No steps available. 😞</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

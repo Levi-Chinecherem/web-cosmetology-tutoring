@@ -1,0 +1,22 @@
+<!-- tutorials/templates/tutorials/tutorial_list.html -->
+{% extends "base.html" %}
+
+{% block title %}Tutorials{% endblock %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h1>Tutorials 📚</h1>
+        <ul class="list-group">
+            {% for tutorial in tutorials %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <a href="{% url 'tutorial-detail' tutorial.pk %}">{{ tutorial.title }}</a>
+                    </div>
+                    <img src="{{ tutorial.image.url }}" alt="{{ tutorial.title }} Image" width="100">
+                </li>
+            {% empty %}
+                <p>No tutorials available. 😞</p>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}

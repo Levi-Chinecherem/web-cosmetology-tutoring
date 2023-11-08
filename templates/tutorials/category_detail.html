@@ -1,0 +1,16 @@
+<!-- tutorials/templates/tutorials/category_detail.html -->
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }}{% endblock %}
+
+{% block content %}
+  <div class="container my-4">
+    <h1 class="display-4">{{ category.name }} 📖</h1>
+    <p>{{ category.description|safe }} 🎯</p>
+    <div class="my-3">
+      {% if user.has_perm 'tutorials.can_delete_category' %}
+        <a href="{% url 'category-delete' category.pk %}" class="btn btn-danger">Delete Category</a>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

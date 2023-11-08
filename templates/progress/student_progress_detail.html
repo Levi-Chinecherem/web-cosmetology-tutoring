@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}{{ student_progress.student.username }}'s Progress 📊{% endblock %}
+
+{% block content %}
+  <div class="container mt-4">
+    <h1 class="display-4">{{ student_progress.student.username }}'s Progress 📊</h1>
+    <ul class="list-group">
+      <li class="list-group-item">
+        <strong>Total Quizzes Taken:</strong> {{ student_progress.total_quizzes_taken }} 📝
+      </li>
+      <li class="list-group-item">
+        <strong>Total Quizzes Correct:</strong> {{ student_progress.total_quizzes_correct }} 🎯
+      </li>
+      <li class="list-group-item">
+        <strong>Percentage Correct:</strong> {{ student_progress.percentage_correct }}% 📈
+      </li>
+    </ul>
+  </div>
+{% endblock %}

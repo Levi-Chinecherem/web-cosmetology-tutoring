@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Confirm Deletion of Instructor-Quiz Association{% endblock %}
+
+{% block content %}
+  <div class="container mt-4">
+    <h1 class="display-4">Confirm Deletion of Instructor-Quiz Association 🗑️</h1>
+    <p>Are you sure you want to delete the association between {{ quiz_instructor.instructor.name }} and {{ quiz_instructor.quiz.title }}?</p>
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Yes, delete it</button>
+      <a href="{% url 'quiz-instructor-list' %}" class="btn btn-secondary">No, go back</a>
+    </form>
+  </div>
+{% endblock %}

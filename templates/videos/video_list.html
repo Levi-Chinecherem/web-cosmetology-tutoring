@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Video List{% endblock %}
+
+{% block content %}
+  <div class="container mt-4">
+    <h1 class="display-4">Video List 📽️</h1>
+    <ul class="list-group">
+      {% for video in videos %}
+        <li class="list-group-item">
+          <a href="{% url 'video-detail' video.pk %}">{{ video.title }}</a> 🎥
+        </li>
+      {% empty %}
+        <p>No videos available. 😞</p>
+      {% endfor %}
+    </ul>
+  </div>
+{% endblock %}

@@ -1,0 +1,31 @@
+<!-- tutorials/templates/tutorials/tutorial_detail.html -->
+{% extends "base.html" %}
+
+{% block title %}{{ tutorial.title }}{% endblock %}
+
+{% block content %}
+  <div class="container my-4">
+    <div class="row">
+      <div class="col-md-8">
+        <h1 class="display-4">{{ tutorial.title }} 📖</h1>
+        <img src="{{ tutorial.image.url }}" alt="{{ tutorial.title }} Image" class="img-fluid my-3" width="800">
+        <div class="ckeditor-content mt-3">
+          {{ tutorial.description|safe }} 🎯
+        </div>
+      </div>
+      <div class="col-md-4">
+        <h2>Steps</h2>
+        <ul>
+            {% for step in tutorial.step_set.all %}
+                <li>{{ step.title }} 📖</li>
+                <p>{{ step.content|safe }} 🎯</p>
+            {% empty %}
+                <p>No steps available for this tutorial. 😞</p>
+            {% endfor %}
+        </ul>
+        <!-- Add a link/button to create a new step -->
+        <a href="{% url 'step-create' tutorial.id %}" class="btn btn-primary mt-3">Create New Step +</a>
+      </div>
+    </div>
+  </div>
+{% endblock %}

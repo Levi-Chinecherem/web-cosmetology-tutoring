@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {% if not quiz_instructor.pk %}Create{% else %}Update{% endif %} Instructor-Quiz Association
+  {% endblock %}
+
+{% block content %}
+  <div class="container mt-4">
+    <h1 class="display-4">
+      {% if not quiz_instructor.pk %}
+        Create Instructor-Quiz Association 📝
+      {% else %}
+        Update Instructor-Quiz Association 📝
+      {% endif %}
+    </h1>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-primary">Save</button>
+    </form>
+  </div>
+{% endblock %}
