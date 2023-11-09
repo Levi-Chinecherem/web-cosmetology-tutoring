@@ -6,8 +6,21 @@ from quizzes.models import Quiz, Question, Answer
 class QuizProgress(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
-    current_question = models.ForeignKey(Question, on_delete=models.SET_NULL, null=True, blank=True)
-    answered_questions = models.ManyToManyField(Question, blank=True)
+    current_question = models.ForeignKey(
+        'quizzes.Question',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='current_question_progress'
+    )
+
+    answered_questions = models.ManyToManyField(
+        'quizzes.Question',
+        related_name='answered_questions_progress'
+    )
+
+    def __str__(self):
+        return f"{self.user.username}'s current question {self.current_question}"
 
 class StudentProgress(models.Model):
     student = models.ForeignKey(User, on_delete=models.CASCADE)  # Link to the student/user

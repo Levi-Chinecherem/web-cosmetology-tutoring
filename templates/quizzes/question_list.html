@@ -1,0 +1,11 @@
+<!-- quizzes/question_list.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="container mt-5">
+    <h1 class="mb-4">❓ Question List</h1>
+    {% for question in questions %}
+        <p><a href="{% url 'question-list' question.pk %}">{{ question.content }}</a></p>
+    {% endfor %}
+  </div>
+{% endblock %}

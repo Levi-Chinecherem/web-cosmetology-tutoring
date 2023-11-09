@@ -1,0 +1,15 @@
+<!-- quizzes/quiz_list.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="container mt-5">
+    <h1 class="mb-4">📚 Quiz List</h1>
+    <div class="list-group">
+      {% for quiz in quizzes %}
+        <a href="{% url 'quiz-detail' quiz.pk %}" class="list-group-item list-group-item-action">
+          {{ quiz.title }} 🌟
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}

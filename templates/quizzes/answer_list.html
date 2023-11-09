@@ -1,0 +1,11 @@
+<!-- quizzes/answer_list.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="container mt-5">
+    <h1 class="mb-4">✅ Answer List</h1>
+    {% for answer in answers %}
+        <p>{{ answer.content }} - {% if answer.is_correct %}Correct{% else %}Incorrect{% endif %}</p>
+    {% endfor %}
+  </div>
+{% endblock %}
