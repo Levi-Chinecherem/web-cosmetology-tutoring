@@ -4,6 +4,8 @@
 
 The Web-Based Cosmetology Tutoring System is a Django-based web application designed to facilitate cosmetology education through tutorials, quizzes, and progress tracking.
 
+![Screenshot 2](screenshots/screenshot2.png)
+
 ## Features
 
 - **Tutorials:** Create, update, and delete tutorials with details such as title, image, category, and description.
