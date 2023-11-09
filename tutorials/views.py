@@ -6,7 +6,21 @@ from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic import ListView, DetailView
 from .forms import StepForm
-from .decorators import admin_required, instructor_required  # Import the decorators
+from django.contrib.auth.decorators import user_passes_test
+
+# Custom decorator for admin user required
+def admin_required(view_func):
+    def check_admin(user):
+        return user.is_superuser
+
+    return user_passes_test(check_admin, login_url=reverse_lazy('login'))(view_func)
+
+# Custom decorator for instructor user required
+def instructor_required(view_func):
+    def check_instructor(user):
+        return user.groups.filter(name='Instructors').exists()
+
+    return user_passes_test(check_instructor, login_url=reverse_lazy('login'))(view_func)
 
 # TUTORIAL VIEWS
 class TutorialListView(ListView):

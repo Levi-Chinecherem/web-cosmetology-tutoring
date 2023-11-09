@@ -48,8 +48,8 @@ INSTALLED_APPS = [
     'instructors',
     'progress',
 
-    
     'ckeditor',
+    'ckeditor_uploader',
 ]
 
 MIDDLEWARE = [
@@ -128,14 +128,54 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
-
 # Optionally, configure the URLs for login and logout
 LOGIN_URL = 'login'
 LOGOUT_URL = 'logout'
 
 # Set the URL for redirecting after a successful login
-LOGIN_REDIRECT_URL = 'dashboard'
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'home'
+
+
+# Define the root directory for static files.
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/root')
+
+# Define the directory where your static files are located.
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+
+# Define the root directory for media files.
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+CKEDITOR_BASEPATH = "/static/root/ckeditor/ckeditor/"
+CKEDITOR_UPLOAD_PATH = 'uploads/'  
+CKEDITOR_IMAGE_BACKEND = "ckeditor_uploader.backends.PillowBackend"
+
+CKEDITOR_UPLOAD_PATH = 'uploads/'
+CKEDITOR_JQUERY_URL = 'https://code.jquery.com/jquery-3.6.0.min.js'  # Use the appropriate jQuery version
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': 'full',
+    },
+}
+# CKEditor jQuery URL
+CKEDITOR_JQUERY_URL = 'https://code.jquery.com/jquery-3.6.0.min.js'
+
+# CKEditor Uploader settings
+CKEDITOR_ALLOW_NONIMAGE_FILES = True  # Disallow non-image file uploads (can be True if needed).
+CKEDITOR_RESTRICT_BY_USER = True  # Restrict file uploads to the current user.
+CKEDITOR_FILENAME_GENERATOR = 'ckeditor_uploader.utils.get_filename'
+
+# CKEditor Uploader views (optional, for more advanced usage)
+CKEDITOR_BROWSE_SHOW_DIRS = True
+CKEDITOR_BROWSE_SHOW_HIDDEN = False
+CKEDITOR_BROWSE_SHOW_INFO = True
+
+# CKEditor media settings
+CKEDITOR_MEDIA_PREFIX = '/media/ckeditor/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

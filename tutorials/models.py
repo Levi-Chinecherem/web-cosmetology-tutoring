@@ -1,5 +1,5 @@
 from django.db import models
-from ckeditor.fields import RichTextUploadingField
+from ckeditor_uploader.fields import RichTextUploadingField
 from django.contrib.auth.models import User
 
 class Category(models.Model):
