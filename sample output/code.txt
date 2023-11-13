@@ -1,0 +1,608 @@
+from django.shortcuts import render
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView
+from .models import Instructor, QuizInstructor
+from django.urls import reverse_lazy
+from tutorials.decorators import admin_required, instructor_required
+from django.utils.decorators import method_decorator
+
+class InstructorListView(ListView):
+    model = Instructor
+    template_name = 'instructors/instructor_list.html'
+    context_object_name = 'instructors'
+
+class InstructorDetailView(DetailView):
+    model = Instructor
+    template_name = 'instructors/instructor_detail.html'
+    context_object_name = 'instructor'
+
+class InstructorCreateView(CreateView):
+    model = Instructor
+    fields = ['user', 'name', 'email', 'specialty', 'experience']
+    template_name = 'instructors/instructor_form.html'
+
+    @method_decorator(admin_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+class InstructorUpdateView(UpdateView):
+    model = Instructor
+    fields = ['user', 'name', 'email', 'specialty', 'experience']
+    template_name = 'instructors/instructor_form.html'
+
+    @method_decorator(admin_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+class InstructorDeleteView(DeleteView):
+    model = Instructor
+    template_name = 'instructors/instructor_confirm_delete.html'
+    success_url = reverse_lazy('instructor-list')
+
+    @method_decorator(admin_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+# QuizInstructor Views
+class QuizInstructorListView(ListView):
+    model = QuizInstructor
+    template_name = 'instructors/quiz_instructor_list.html'
+    context_object_name = 'quiz_instructors'
+
+class QuizInstructorDetailView(DetailView):
+    model = QuizInstructor
+    template_name = 'instructors/quiz_instructor_detail.html'
+    context_object_name = 'quiz_instructor'
+
+class QuizInstructorCreateView(CreateView):
+    model = QuizInstructor
+    fields = ['quiz', 'instructor']
+    success_url = reverse_lazy('quiz-instructor-list')
+
+    @method_decorator(admin_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+class QuizInstructorUpdateView(UpdateView):
+    model = QuizInstructor
+    fields = ['quiz', 'instructor']
+    template_name_suffix = '_update_form'
+    success_url = reverse_lazy('quiz-instructor-list')
+
+    @method_decorator(admin_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+class QuizInstructorDeleteView(DeleteView):
+    model = QuizInstructor
+    success_url = reverse_lazy('quiz-instructor-list')
+
+    @method_decorator(admin_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+
+# progress/views.py
+from django.shortcuts import render, redirect
+from .models import QuizProgress
+from quizzes.models import Quiz, Question, Answer
+from django.views.generic import ListView
+from .models import StudentProgress
+from django.urls import reverse
+
+# Progress Views
+class StudentProgressListView(ListView):
+    model = StudentProgress
+    template_name = 'progress/student_progress_list.html'
+    context_object_name = 'student_progress'
+
+def start_quiz(request, quiz_id):
+    # Retrieve the quiz and initialize progress
+    quiz = Quiz.objects.get(pk=quiz_id)
+    progress, created = QuizProgress.objects.get_or_create(user=request.user, quiz=quiz)
+    if created:
+        # Set the initial question as the current question
+        progress.current_question = quiz.questions.first()
+        progress.save()
+    return redirect('continue-quiz', quiz_id=quiz_id)
+
+def continue_quiz(request, quiz_id):
+    # Retrieve the quiz and progress
+    quiz = Quiz.objects.get(pk=quiz_id)
+    progress, _ = QuizProgress.objects.get_or_create(user=request.user, quiz=quiz)
+    current_question = progress.current_question
+    if current_question:
+        # Display the current question to the user
+        return render(request, 'progress/question.html', {'question': current_question})
+    else:
+        # Quiz completed
+        return render(request, 'progress/quiz_completed.html')
+
+def answer_question(request, quiz_id, question_id):
+    # Handle user's answer and update progress
+    quiz = Quiz.objects.get(pk=quiz_id)
+    question = Question.objects.get(pk=question_id)
+    selected_answer = request.POST.get('answer')  # Retrieve selected answer
+    # Add logic to check if the answer is correct
+    is_correct = True  # Replace with actual logic
+    if is_correct:
+        progress, _ = QuizProgress.objects.get_or_create(user=request.user, quiz=quiz)
+        progress.answered_questions.add(question)  # Mark the question as answered
+        progress.current_question = get_next_unanswered_question(quiz, progress)
+        progress.save()
+    return redirect('continue-quiz', quiz_id=quiz_id)
+
+def get_next_unanswered_question(quiz, progress):
+    # Get all questions in the quiz
+    all_questions = quiz.questions.all()
+
+    # Filter out the questions that the user has already answered
+    answered_questions = progress.answered_questions.all()
+
+    # Find the first unanswered question
+    for question in all_questions:
+        if question not in answered_questions:
+            return reverse('answer', args=[quiz.id, question.id])  # Redirect to answer page
+
+    # If all questions have been answered, return the result page
+    return reverse('quiz-result', args=[quiz.id])
+
+from django.shortcuts import render, get_object_or_404
+from .models import Quiz, Question, Answer
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse_lazy
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView
+from django.contrib.auth.decorators import user_passes_test
+from tutorials.decorators import admin_required, instructor_required
+from django.utils.decorators import method_decorator
+from django.http import JsonResponse
+from django.views import View
+from progress.models import QuizProgress, StudentProgress
+
+# QUIZ VIEWS
+class QuizListView(ListView):
+    model = Quiz
+    template_name = 'quizzes/quiz_list.html'
+    context_object_name = 'quizzes'
+
+class QuizDetailView(DetailView):
+    model = Quiz
+    template_name = 'quizzes/quiz_detail.html'
+    context_object_name = 'quiz'
+
+class QuizCreateView(LoginRequiredMixin, CreateView):
+    model = Quiz
+    fields = ['title', 'description']
+    template_name = 'quizzes/quiz_form.html'
+    success_url = reverse_lazy('quiz-list')
+
+    @method_decorator(admin_required)
+    @method_decorator(instructor_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def form_valid(self, form):
+        form.instance.creator = self.request.user  # Set the creator to the logged-in user
+        return super().form_valid(form)
+
+class QuizUpdateView(LoginRequiredMixin, UpdateView):
+    model = Quiz
+    fields = ['title', 'description']
+    template_name_suffix = '_update_form'
+    success_url = reverse_lazy('quiz-list')
+
+    @method_decorator(admin_required)
+    @method_decorator(instructor_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+class QuizDeleteView(LoginRequiredMixin, DeleteView):
+    model = Quiz
+    template_name = 'quizzes/quiz_confirm_delete.html'
+    success_url = reverse_lazy('quiz-list')
+
+    @method_decorator(admin_required)
+    @method_decorator(instructor_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+# QUESTION VIEWS
+class QuestionCreateView(LoginRequiredMixin, CreateView):
+    model = Question
+    fields = ['quiz', 'content']
+    success_url = reverse_lazy('question-list')
+
+    @method_decorator(admin_required)
+    @method_decorator(instructor_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+class QuestionDetailView(DetailView):
+    model = Question
+    template_name = 'quizzes/question_detail.html'
+    context_object_name = 'question'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        answers = Answer.objects.filter(question=context['question'])
+        context['answers'] = answers
+        return context
+
+    def post(self, request, *args, **kwargs):
+        question = self.get_object()
+        selected_answer_id = request.POST.get('selected_answer')
+        selected_answer = get_object_or_404(Answer, pk=selected_answer_id)
+        
+        is_correct = selected_answer.is_correct
+
+        # Update progress
+        quiz_progress, created = QuizProgress.objects.get_or_create(
+            user=self.request.user,
+            quiz=question.quiz  # Include the quiz in the filter
+        )
+        quiz_progress.answered_questions.add(question)
+        quiz_progress.current_question = None
+        quiz_progress.save()
+
+        # Update or create student progress
+        student_progress, created = StudentProgress.objects.get_or_create(
+            student=self.request.user,
+            quiz_attempt=question.quiz
+        )
+        if is_correct:
+            student_progress.score += 1
+        student_progress.save()
+
+        # Prepare context for rendering the template
+        answers = Answer.objects.filter(question=question)
+        context = {'question': question, 'answers': answers, 'score': student_progress.score}
+
+        # Prepare JSON response
+        response_data = {
+            'is_correct': is_correct,
+            'score': student_progress.score,
+            'questions_left': Question.objects.filter(quiz=question.quiz).exclude(id__in=quiz_progress.answered_questions.all()).count()
+        }
+
+        # If the request is AJAX, return JSON response
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse(response_data)
+
+        # If not AJAX, render the template with the updated context
+        return render(request, self.template_name, context)
+
+class ScoreQuestionView(View):
+    def get(self, request, *args, **kwargs):
+        # Handle GET requests here
+        return JsonResponse({'message': 'GET requests are not allowed for this endpoint.'}, status=405)
+
+    def post(self, request, *args, **kwargs):
+        if not request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'message': 'Invalid request.'}, status=400)
+
+        question_id = kwargs.get('pk')
+        question = get_object_or_404(Question, pk=question_id)
+        
+        # For demonstration purposes, assuming the selected answer ID is sent in the POST data.
+        selected_answer_id = request.POST.get('selected_answer')
+        selected_answer = get_object_or_404(Answer, pk=selected_answer_id)
+
+        # Perform scoring logic here...
+        is_correct = selected_answer.is_correct
+
+        # Return JSON response
+        return JsonResponse({'is_correct': is_correct})
+
+
+class QuestionUpdateView(LoginRequiredMixin, UpdateView):
+    model = Question
+    fields = ['quiz', 'content']
+    template_name_suffix = '_update_form'
+    success_url = reverse_lazy('question-list')
+
+    @method_decorator(admin_required)
+    @method_decorator(instructor_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+class QuestionDeleteView(LoginRequiredMixin, DeleteView):
+    model = Question
+    success_url = reverse_lazy('question-list')
+
+    @method_decorator(admin_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+# ANSWER VIEWS
+class AnswerCreateView(LoginRequiredMixin, CreateView):
+    model = Answer
+    fields = ['question', 'content', 'is_correct']
+    success_url = reverse_lazy('answer-list')
+
+    @method_decorator(admin_required)
+    @method_decorator(instructor_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+class AnswerUpdateView(LoginRequiredMixin, UpdateView):
+    model = Answer
+    fields = ['question', 'content', 'is_correct']
+    template_name_suffix = '_update_form'
+    success_url = reverse_lazy('answer-list')
+
+    @method_decorator(admin_required)
+    @method_decorator(instructor_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+class AnswerDeleteView(LoginRequiredMixin, DeleteView):
+    model = Answer
+    success_url = reverse_lazy('answer-list')
+
+    @method_decorator(admin_required)
+    @method_decorator(instructor_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+# tutorials/views.py
+from django.shortcuts import render, get_object_or_404
+from .models import Tutorial, Step, Category
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.urls import reverse_lazy
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView
+from .forms import StepForm
+from django.contrib.auth.decorators import user_passes_test
+from .decorators import admin_required, instructor_required
+from django.utils.decorators import method_decorator
+
+# TUTORIAL VIEWS
+class TutorialListView(ListView):
+    model = Tutorial
+    template_name = 'tutorials/tutorial_list.html'
+    context_object_name = 'tutorials'
+
+class TutorialDetailView(DetailView):
+    model = Tutorial
+    template_name = 'tutorials/tutorial_detail.html'
+    context_object_name = 'tutorial'
+
+class TutorialCreateView(LoginRequiredMixin, CreateView):
+    model = Tutorial
+    fields = ['title', 'image', 'category', 'description']
+    success_url = reverse_lazy('tutorial-list')
+
+    @method_decorator(admin_required)
+    @method_decorator(instructor_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def form_valid(self, form):
+        form.instance.creator = self.request.user  # Set the creator to the logged-in user
+        return super().form_valid(form)
+
+class TutorialUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    model = Tutorial
+    fields = ['title', 'image', 'category', 'description']
+    template_name_suffix = '_update_form'
+    success_url = reverse_lazy('tutorial-list')
+    permission_required = 'tutorials.can_change_tutorial'  # Adjust the correct permission name
+
+    @method_decorator(admin_required)
+    @method_decorator(instructor_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['creator'] = self.request.user  # Pass the creator to the form
+        return kwargs
+
+class TutorialDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = Tutorial
+    success_url = reverse_lazy('tutorial-list')
+    permission_required = 'tutorials.can_delete_tutorial'  
+
+    @method_decorator(admin_required)
+    @method_decorator(instructor_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+# STEPS VIEWS
+class StepListView(ListView):
+    model = Step
+    template_name = 'tutorials/step_list.html'
+    context_object_name = 'steps'
+
+class StepDetailView(DetailView):
+    model = Step
+    template_name = 'tutorials/step_detail.html'
+    context_object_name = 'step'
+
+class StepCreateView(LoginRequiredMixin, CreateView):
+    model = Step
+    form_class = StepForm  # Use the updated StepForm
+    template_name = 'tutorials/step_form.html'
+    permission_required = 'tutorials.can_create_step'
+
+    @method_decorator(admin_required)
+    @method_decorator(instructor_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def form_valid(self, form):
+        tutorial = get_object_or_404(Tutorial, pk=self.kwargs['tutorial_id'])
+        form.instance.tutorial = tutorial  # Set the tutorial for the step
+        form.instance.creator = self.request.user  # Set the creator to the logged-in user
+        form.instance.order = form.cleaned_data['order']  # Set the order from the form
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('tutorial-detail', args=[self.kwargs['tutorial_id']])
+
+class StepUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    model = Step
+    fields = ['tutorial', 'order', 'title', 'content']
+    template_name_suffix = '_update_form'
+    success_url = reverse_lazy('step-list')
+    permission_required = 'tutorials.can_change_step'  # Specify the correct permission name
+
+    @method_decorator(admin_required)
+    @method_decorator(instructor_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+class StepDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = Step
+    success_url = reverse_lazy('step-list')
+    permission_required = 'tutorials.can_delete_step' 
+
+    @method_decorator(admin_required)
+    @method_decorator(instructor_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+# Category VIEWS
+class CategoryListView(ListView):
+    model = Category
+    template_name = 'tutorials/category_list.html'
+    context_object_name = 'categories'
+
+class CategoryDetailView(DetailView):
+    model = Category
+    template_name = 'tutorials/category_detail.html'
+    context_object_name = 'category'
+
+class CategoryCreateView(LoginRequiredMixin, CreateView):
+    model = Category
+    fields = ['name', 'description']
+    success_url = reverse_lazy('category-list')
+
+    @method_decorator(admin_required)
+    @method_decorator(instructor_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+class CategoryUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    model = Category
+    fields = ['name', 'description']
+    template_name_suffix = '_update_form'
+    success_url = reverse_lazy('category-list')
+    permission_required = 'tutorials.can_change_category'  # Specify the correct permission name
+
+    @method_decorator(admin_required)
+    @method_decorator(instructor_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+class CategoryDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = Category
+    success_url = reverse_lazy('category-list')
+    permission_required = 'tutorials.can_delete_category' 
+
+    @method_decorator(admin_required)
+    @method_decorator(instructor_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+# videos/views.py
+from django.shortcuts import render, get_object_or_404
+from .models import Video, VideoCategory
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.urls import reverse_lazy
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView
+from django.contrib.auth.decorators import user_passes_test
+from tutorials.decorators import admin_required, instructor_required
+from django.utils.decorators import method_decorator
+
+# VIDEO VIEWS
+class VideoListView(ListView):
+    model = Video
+    template_name = 'videos/video_list.html'
+    context_object_name = 'videos'
+
+class VideoDetailView(DetailView):
+    model = Video
+    template_name = 'videos/video_detail.html'
+    context_object_name = 'video'
+
+class VideoCreateView(LoginRequiredMixin, CreateView):
+    model = Video
+    fields = ['title', 'description', 'video_url', 'category']
+    success_url = reverse_lazy('video-list')
+
+    @method_decorator(admin_required)
+    @method_decorator(instructor_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def form_valid(self, form):
+        form.instance.creator = self.request.user  # Set the creator to the logged-in user
+        return super().form_valid(form)
+
+class VideoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    model = Video
+    fields = ['title', 'description', 'video_url', 'category']
+    template_name_suffix = '_update_form'
+    success_url = reverse_lazy('video-list')
+    permission_required = 'videos.can_change_video'  # Specify the correct permission name
+
+    @method_decorator(admin_required)
+    @method_decorator(instructor_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+class VideoDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = Video
+    success_url = reverse_lazy('video-list')
+    permission_required = 'videos.can_delete_video' 
+
+    @method_decorator(admin_required)
+    @method_decorator(instructor_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+# VIDEO CATEGORY VIEWS
+class VideoCategoryListView(ListView):
+    model = VideoCategory
+    template_name = 'videos/video_category_list.html'
+    context_object_name = 'video_categories'
+
+class VideoCategoryDetailView(DetailView):
+    model = VideoCategory
+    template_name = 'videos/video_category_detail.html'
+    context_object_name = 'video_category'
+
+class VideoCategoryCreateView(LoginRequiredMixin, CreateView):
+    model = VideoCategory
+    fields = ['name', 'description']
+    success_url = reverse_lazy('video-category-list')
+
+    @method_decorator(admin_required)
+    @method_decorator(instructor_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+class VideoCategoryUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    model = VideoCategory
+    fields = ['name', 'description']
+    template_name_suffix = '_update_form'
+    success_url = reverse_lazy('video-category-list')
+    permission_required = 'videos.can_change_videocategory'  # Specify the correct permission name
+
+    @method_decorator(admin_required)
+    @method_decorator(instructor_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+class VideoCategoryDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = VideoCategory
+    success_url = reverse_lazy('video-category-list')
+    permission_required = 'videos.can_delete_videocategory'
+
+    @method_decorator(admin_required)
+    @method_decorator(instructor_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
