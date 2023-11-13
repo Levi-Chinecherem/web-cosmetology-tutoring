@@ -5,9 +5,9 @@ from quizzes.models import Quiz, Question, Answer
 
 class QuizProgress(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, null=True, blank=True)
     current_question = models.ForeignKey(
-        'quizzes.Question',
+        Question,  # Updated to use the Question model directly
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
@@ -15,7 +15,7 @@ class QuizProgress(models.Model):
     )
 
     answered_questions = models.ManyToManyField(
-        'quizzes.Question',
+        Question,  # Updated to use the Question model directly
         related_name='answered_questions_progress'
     )
 
@@ -25,9 +25,8 @@ class QuizProgress(models.Model):
 class StudentProgress(models.Model):
     student = models.ForeignKey(User, on_delete=models.CASCADE)  # Link to the student/user
     quiz_attempt = models.ForeignKey(Quiz, on_delete=models.CASCADE)  # Link to the quiz attempt
-    score = models.PositiveIntegerField()  # Track the score or progress
+    score = models.PositiveIntegerField(blank=True, null=True,)  # Track the score or progress
     timestamp = models.DateTimeField(auto_now_add=True)  # Track when the progress was made
 
     def __str__(self):
         return f"{self.student.username}'s progress for {self.quiz_attempt.title}"
-

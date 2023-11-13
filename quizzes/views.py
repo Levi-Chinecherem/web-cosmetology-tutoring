@@ -7,6 +7,9 @@ from django.views.generic import ListView, DetailView
 from django.contrib.auth.decorators import user_passes_test
 from tutorials.decorators import admin_required, instructor_required
 from django.utils.decorators import method_decorator
+from django.http import JsonResponse
+from django.views import View
+from progress.models import QuizProgress, StudentProgress
 
 # QUIZ VIEWS
 class QuizListView(ListView):
@@ -65,6 +68,83 @@ class QuestionCreateView(LoginRequiredMixin, CreateView):
     @method_decorator(instructor_required)
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
+
+class QuestionDetailView(DetailView):
+    model = Question
+    template_name = 'quizzes/question_detail.html'
+    context_object_name = 'question'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        answers = Answer.objects.filter(question=context['question'])
+        context['answers'] = answers
+        return context
+
+    def post(self, request, *args, **kwargs):
+        question = self.get_object()
+        selected_answer_id = request.POST.get('selected_answer')
+        selected_answer = get_object_or_404(Answer, pk=selected_answer_id)
+        
+        is_correct = selected_answer.is_correct
+
+        # Update progress
+        quiz_progress, created = QuizProgress.objects.get_or_create(
+            user=self.request.user,
+            quiz=question.quiz  # Include the quiz in the filter
+        )
+        quiz_progress.answered_questions.add(question)
+        quiz_progress.current_question = None
+        quiz_progress.save()
+
+        # Update or create student progress
+        student_progress, created = StudentProgress.objects.get_or_create(
+            student=self.request.user,
+            quiz_attempt=question.quiz
+        )
+        if is_correct:
+            student_progress.score += 1
+        student_progress.save()
+
+        # Prepare context for rendering the template
+        answers = Answer.objects.filter(question=question)
+        context = {'question': question, 'answers': answers, 'score': student_progress.score}
+
+        # Prepare JSON response
+        response_data = {
+            'is_correct': is_correct,
+            'score': student_progress.score,
+            'questions_left': Question.objects.filter(quiz=question.quiz).exclude(id__in=quiz_progress.answered_questions.all()).count()
+        }
+
+        # If the request is AJAX, return JSON response
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse(response_data)
+
+        # If not AJAX, render the template with the updated context
+        return render(request, self.template_name, context)
+
+class ScoreQuestionView(View):
+    def get(self, request, *args, **kwargs):
+        # Handle GET requests here
+        return JsonResponse({'message': 'GET requests are not allowed for this endpoint.'}, status=405)
+
+    def post(self, request, *args, **kwargs):
+        if not request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'message': 'Invalid request.'}, status=400)
+
+        question_id = kwargs.get('pk')
+        question = get_object_or_404(Question, pk=question_id)
+        
+        # For demonstration purposes, assuming the selected answer ID is sent in the POST data.
+        selected_answer_id = request.POST.get('selected_answer')
+        selected_answer = get_object_or_404(Answer, pk=selected_answer_id)
+
+        # Perform scoring logic here...
+        is_correct = selected_answer.is_correct
+
+        # Return JSON response
+        return JsonResponse({'is_correct': is_correct})
+
 
 class QuestionUpdateView(LoginRequiredMixin, UpdateView):
     model = Question

@@ -18,11 +18,11 @@ class SignupView(CreateView):
 # Custom login view extending the built-in view
 class CustomLoginView(LoginView):
     template_name = 'registration/login.html'  # Customize the login template as needed
-    success_url = '/dashboard/'  # Redirect to the user's dashboard or homepage upon successful login
+    success_url = '/home/'  # Redirect to the user's dashboard or homepage upon successful login
 
 # Custom logout view extending the built-in view
 class CustomLogoutView(LogoutView):
-    next_page = '/login/'  # Redirect to the login page after logout
+    next_page = '/account/login/'  # Redirect to the login page after logout
 
 # Custom password change view extending the built-in view
 class CustomPasswordChangeView(PasswordChangeView):

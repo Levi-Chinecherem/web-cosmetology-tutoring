@@ -10,5 +10,19 @@
         <p class="card-text">{{ quiz.description }}</p>
       </div>
     </div>
-  </div>
+
+    <div class="mt-4">
+      <h2>Quiz Questions</h2>
+      {% if quiz.question_set.all %}
+        <div class="list-group">
+          {% for question in quiz.question_set.all %}
+            <a href="{% url 'question_detail' question.id %}" class="list-group-item list-group-item-action">
+              {{ question.content }}
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>No questions available for this quiz.</p>
+      {% endif %}
+    </div>
 {% endblock %}

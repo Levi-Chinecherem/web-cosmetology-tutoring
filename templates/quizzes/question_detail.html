@@ -1,0 +1,83 @@
+<!-- quizzes/question_detail.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="container mt-5">
+    <h1 class="mb-4">🔍 Question Detail</h1>
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">{{ question.content }} 🌟</h5>
+        <p class="card-text">Quiz: {{ question.quiz.title }}</p>
+        
+        {% if answers %}
+        <form id="score-form" data-question-id="{{ question.id }}" class="score-form" method="post">
+
+          {% csrf_token %}
+          <ul class="list-unstyled">
+              {% for answer in answers %}
+              <li class="mb-2">
+                  <label class="d-flex align-items-center">
+                    <input type="radio" name="selected_answer" value="{{ answer.id }}">
+                    <span class="ml-2">{{ answer.content }}</span>
+                  </label>
+              </li>
+              {% endfor %}
+          </ul>
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+        {% else %}
+        <p>No answers available for this question.</p>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+  <script>
+    $(document).ready(function() {
+        $('#score-form').submit(function(e) {
+            e.preventDefault();
+            
+            console.log('Form submitted');  // Add this line
+    
+            var questionId = $(this).data('question-id');
+            var selectedAnswer = $('input[name="selected_answer"]:checked').val();
+    
+            console.log('Question ID:', questionId);  // Add this line
+            console.log('Selected Answer:', selectedAnswer);  // Add this line
+            console.log('AJAX Request URL:', `/quizzes/question/${questionId}/score/`);
+
+            $.ajax({
+                type: 'POST',
+                url: `{% url 'score_question' pk=question.pk %}`,
+                data: {
+                    csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+                    selected_answer: selectedAnswer
+                },
+                success: function(response) {
+                    console.log('AJAX Success:', response);  // Add this line
+    
+                    if (response.is_correct) {
+                        Swal.fire({
+                            title: 'Correct!',
+                            icon: 'success',
+                            text: 'Your answer is correct.',
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Incorrect!',
+                            icon: 'error',
+                            text: 'Your answer is incorrect.',
+                        });
+                    }
+                },
+                error: function(response) {
+                    console.log('AJAX Error:', response);  // Add this line
+                }
+            });
+        });
+    });
+    
+    </script>
+  
+  {% endblock %}
+  

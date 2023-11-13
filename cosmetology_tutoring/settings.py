@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'account',
     'tutorials',
     'videos',
+    'videos.templatetags',
     'quizzes',
     'instructors',
     'progress',
@@ -67,7 +68,7 @@ ROOT_URLCONF = 'cosmetology_tutoring.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -129,8 +130,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 # Optionally, configure the URLs for login and logout
-LOGIN_URL = 'login'
-LOGOUT_URL = 'logout'
+LOGIN_URL = 'account:login'
+LOGOUT_URL = 'account:logout'
 
 # Set the URL for redirecting after a successful login
 LOGIN_REDIRECT_URL = 'home'

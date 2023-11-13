@@ -21,16 +21,16 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ml-auto"> <!-- Use ml-auto to push the links to the right -->
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'signup' %}">Sign Up</a>
+                        <a class="nav-link" href="{% url 'account:signup' %}">Sign Up</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login' %}">Log In</a>
+                        <a class="nav-link" href="{% url 'account:login' %}">Log In</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'password_change' %}">Change Password</a>
+                        <a class="nav-link" href="{% url 'account:password_change' %}">Change Password</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'password_reset' %}">Reset Password</a>
+                        <a class="nav-link" href="{% url 'account:password_reset' %}">Reset Password</a>
                     </li>
                 </ul>
             </div>
