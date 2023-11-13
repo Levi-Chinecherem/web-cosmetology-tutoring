@@ -4,7 +4,7 @@
 
 The Web-Based Cosmetology Tutoring System is a Django-based web application designed to facilitate cosmetology education through tutorials, quizzes, and progress tracking.
 
-![Screenshot 2](screenshots/screenshot2.png)
+![Screenshot 2](https://github.com/Levi-Chinecherem/web-cosmetology-tutoring/blob/main/sample%20output/p1.png)
 
 ## Features
 
@@ -80,11 +80,14 @@ The Web-Based Cosmetology Tutoring System is a Django-based web application desi
 
 ## Screenshots
 
-![Screenshot 1](screenshots/screenshot1.png)
-*Caption for Screenshot 1*
+![Screenshot 2](https://github.com/Levi-Chinecherem/web-cosmetology-tutoring/blob/main/sample%20output/p2.png)
 
-![Screenshot 2](screenshots/screenshot2.png)
-*Caption for Screenshot 2*
+![Screenshot 2](https://github.com/Levi-Chinecherem/web-cosmetology-tutoring/blob/main/sample%20output/p3.png)
+
+![Screenshot 2](https://github.com/Levi-Chinecherem/web-cosmetology-tutoring/blob/main/sample%20output/p4.png)
+
+![Screenshot 2](https://github.com/Levi-Chinecherem/web-cosmetology-tutoring/blob/main/sample%20output/p5.png)
+
 
 ## Sample Output
 
